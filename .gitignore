@@ -263,8 +263,8 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
-/src/Portfolio.API/bin/*
-/src/Portfolio.API/obj/*
+/src/Portfolio.Application/bin/*
+/src/Portfolio.Application/obj/*
 /src/Portfolio.CrossCutting/bin/*
 /src/Portfolio.CrossCutting/obj/*
 /src/Portfolio.Data/bin/*
