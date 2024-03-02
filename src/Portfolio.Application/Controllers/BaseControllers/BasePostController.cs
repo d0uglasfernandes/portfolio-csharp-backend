@@ -1,31 +1,22 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using Portfolio.Application.Controllers.BaseControllers.Interfaces;
+﻿using Portfolio.Application.Controllers.BaseControllers.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using MediatR;
 
 namespace Portfolio.Application.Controllers.BaseControllers
 {
-    public class BasePostController<CommandEntity, LoggerObject> :
-        BaseController<LoggerObject>,
+    public class BasePostController<CommandEntity, LoggerObject>(
+        IMediator mediator,
+        ILogger<LoggerObject> logger
+    ) :
+        BaseController<LoggerObject>(mediator, logger),
         IBasePostController<CommandEntity>
         where CommandEntity : class
         where LoggerObject : class
     {
-        public BasePostController(
-            IMediator mediator,
-            ILogger<LoggerObject> logger
-            )
-        : base(mediator, logger)
-        {
-        }
-
         public async Task<IActionResult> PostAsync([FromBody] CommandEntity value, CancellationToken cancellationToken)
         {
-            var result = await mediator.Send(value, cancellationToken);
+            var result = await _mediator.Send(value, cancellationToken);
             return Created("/get", result);
         }
-
     }
 }

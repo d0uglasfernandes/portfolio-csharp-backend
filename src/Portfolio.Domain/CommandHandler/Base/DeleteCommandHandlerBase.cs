@@ -6,30 +6,25 @@ using Portfolio.Domain.Interfaces.Repository;
 using AutoMapper;
 using FluentValidation;
 using MediatR;
+using Portfolio.Domain.Dto.Result;
 
 namespace Portfolio.Domain.CommandHandler.Base
 {
-    public class DeleteCommandHandlerBase<RequestCommand, EntityBase>
-        : CommandHandlerBase<RequestCommand, bool>, IRequestHandler<RequestCommand, bool>
-            where RequestCommand : IRequest<bool>
+    public class DeleteCommandHandlerBase<RequestCommand, EntityBase>(
+        IDataModuleDBPortfolio dataModule,
+        IMapper mapper,
+        IValidator<RequestCommand> validator,
+        IRepository<EntityBase> repository)
+        : CommandHandlerBase<RequestCommand, ResultDto>(dataModule, mapper, validator), IRequestHandler<RequestCommand, ResultDto>
+            where RequestCommand : IRequest<ResultDto>
             where EntityBase : BaseEntity
     {
 
-        public IRepository<EntityBase> repository;
+        public IRepository<EntityBase> repository = repository;
 
-        public DeleteCommandHandlerBase(
-            IDataModuleDBPortfolio dataModule,
-            IMapper mapper,
-            IValidator<RequestCommand> validator,
-            IRepository<EntityBase> repository)
-        : base(dataModule, mapper, validator)
-        {
-            this.repository = repository;
-        }
-        
         public RequestRepositoryData<EntityBase, RequestCommand> OnRequestRepositoryData { get; set; }
 
-        public override async Task<bool> Handle(RequestCommand request, CancellationToken cancellationToken)
+        public override async Task<ResultDto> Handle(RequestCommand request, CancellationToken cancellationToken)
         {
             await base.Handle(request, cancellationToken);
 
@@ -42,7 +37,11 @@ namespace Portfolio.Domain.CommandHandler.Base
 
             await this.repository.DeleteAsync(objEntity.Id);
 
-            return true;
+            return new ResultDto()
+            {
+                IsSuccess = true,
+                Result = true
+            };
         }
 
     }

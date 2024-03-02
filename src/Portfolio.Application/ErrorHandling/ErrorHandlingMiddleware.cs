@@ -1,25 +1,44 @@
-﻿using Microsoft.AspNetCore.Http;
-using System;
-using System.Net;
+﻿using Portfolio.Domain.Dto.Result;
+using Portfolio.Domain.Dto.ValidationError;
+using Portfolio.Domain.Exceptions;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Portfolio.Application.ErrorHandling
 {
-    public class ErrorHandlingMiddleware
+    public class ErrorHandlingMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate next;
-
-        public ErrorHandlingMiddleware(RequestDelegate next)
-        {
-            this.next = next;
-        }
+        private readonly RequestDelegate _next = next;
 
         public async Task Invoke(HttpContext context)
         {
             try
             {
-                await next(context);
+                await _next(context);
+            }
+            catch (ValidationException exception)
+            {
+                var result = new ResultDto
+                {
+                    IsSuccess = false,
+                    ErrorType = exception.GetType().Name,
+                    Error = "Validation Error",
+                    ValidationErrors = []
+                };
+
+                if (exception.Errors is not null && exception.Errors.Count > 0)
+                {
+                    result.ValidationErrors = exception.Errors.Select(x => new ValidationErrorDto
+                    {
+                        Property = x.Property,
+                        ErrorMessage = x.ErrorMessage
+                    }).ToList();
+                }
+
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+
+                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await context.Response.WriteAsync(JsonSerializer.Serialize(result));
             }
             catch (Exception ex)
             {
@@ -29,16 +48,16 @@ namespace Portfolio.Application.ErrorHandling
 
         private static Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            var code = HttpStatusCode.InternalServerError; // 500 if unexpected
-
-            //if (exception is Exception) code = HttpStatusCode.NotFound;
-            // else if (exception is MyUnauthorizedException) code = HttpStatusCode.Unauthorized;
-            // else if (exception is MyException)             code = HttpStatusCode.BadRequest;
-
-            var result = JsonSerializer.Serialize(new { error = exception?.InnerException?.Message ?? exception.Message });
+            var result = new ResultDto
+            {
+                IsSuccess = false,
+                ErrorType = exception.GetType().Name,
+                Error = exception?.InnerException?.Message ?? exception.Message,
+                ValidationErrors = []
+            };
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)code;
-            return context.Response.WriteAsync(result);
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            return context.Response.WriteAsync(JsonSerializer.Serialize(result));
         }
     }
 }

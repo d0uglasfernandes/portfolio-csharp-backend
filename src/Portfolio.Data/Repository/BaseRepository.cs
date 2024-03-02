@@ -127,11 +127,9 @@ namespace Portfolio.Data.Repository
                 {
                     if (entity.Id == Guid.Empty)
                         entity.Id = Guid.NewGuid();
-
-                    _dataset.Add(entity);
                 }
 
-                await _context.SaveChangesAsync();
+                await _context.BulkInsertOptimizedAsync(listEntity);
             }
             catch (Exception)
             {
@@ -145,16 +143,33 @@ namespace Portfolio.Data.Repository
         {
             try
             {
-                foreach (var entity in listEntity)
-                {
-                    var result = await _dataset.SingleOrDefaultAsync(p => p.Id.Equals(entity.Id));
-                    if (result == null)
-                        return false;
+                await _context.BulkUpdateAsync(listEntity);
+                return true;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
 
-                    _context.Entry(result).CurrentValues.SetValues(entity);
-                }
+        public async Task<bool> UpsertListAsync(List<T> listEntity)
+        {
+            try
+            {
+                await _context.BulkMergeAsync(listEntity);
+                return true;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
 
-                await _context.SaveChangesAsync();
+        public async Task<bool> DeleteListAsync(List<T> listEntity)
+        {
+            try
+            {
+                await _context.BulkDeleteAsync(listEntity);
                 return true;
             }
             catch (Exception)

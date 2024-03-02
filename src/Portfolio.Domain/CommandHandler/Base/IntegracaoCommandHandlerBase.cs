@@ -5,66 +5,45 @@ using System.Threading.Tasks;
 using System.Threading;
 using Portfolio.Domain.Entities.Base;
 using Portfolio.Domain.Interfaces.Repository;
-using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using FluentValidation;
 using MediatR;
+using Portfolio.Domain.Dto.Result;
 
 namespace Portfolio.Domain.CommandHandler.Base
 {
-    public class IntegracaoCommandHandlerBase<RequestCommand, EntityBase>
-        : CommandHandlerBase<RequestCommand, bool>, IRequestHandler<RequestCommand, bool> 
-            where RequestCommand : IRequest<bool>
+    public class IntegracaoCommandHandlerBase<RequestCommand, EntityBase>(
+        IDataModuleDBPortfolio dataModule,
+        IMapper mapper,
+        IValidator<RequestCommand> validator,
+        IRepository<EntityBase> repository)
+        : CommandHandlerBase<RequestCommand, ResultDto>(dataModule, mapper, validator), IRequestHandler<RequestCommand, ResultDto> 
+            where RequestCommand : IRequest<ResultDto>
             where EntityBase : BaseEntity
     {
-        public readonly IMapper mapper; 
-        public readonly IDataModuleDBPortfolio dataModule;
-        public readonly IRepository<EntityBase> repository;
+        public readonly IMapper mapper = mapper; 
+        public readonly IDataModuleDBPortfolio dataModule = dataModule;
+        public readonly IRepository<EntityBase> repository = repository;
 
-        public IntegracaoCommandHandlerBase(
-            IDataModuleDBPortfolio dataModule,
-            IMapper mapper,
-            IValidator<RequestCommand> validator,
-            IRepository<EntityBase> repository)
-        : base(dataModule, mapper, validator)
-        {
-            this.mapper = mapper;
-            this.dataModule = dataModule;
-            this.repository = repository;
-        }
-
-        public override async Task<bool> Handle(RequestCommand request, CancellationToken cancellationToken)
+        public override async Task<ResultDto> Handle(RequestCommand request, CancellationToken cancellationToken)
         {
             await base.Handle(request, cancellationToken);
-            return true;
+            return new ResultDto()
+            {
+                IsSuccess = true,
+                Result = true
+            };
         }
 
-        public virtual async Task<bool> HandleList(List<EntityBase> request, CancellationToken cancellationToken)
+        public virtual async Task<ResultDto> HandleList(List<EntityBase> request, CancellationToken cancellationToken)
         {
-            List<EntityBase> registrosUpdate = new List<EntityBase>();
-            List<EntityBase> registrosInsert = new List<EntityBase>();
-
-            foreach(var entity in request)
+            await repository.UpsertListAsync(request);
+            
+            return new ResultDto()
             {
-                var dbData = await this.repository.DataSet.FirstOrDefaultAsync(x => x.Id.Equals(entity.Id));
-
-                if (dbData != null)
-                {
-                    if (!PublicInstancePropertiesEqual(dbData, entity))
-                    {
-                        entity.Id = dbData.Id;
-                        registrosUpdate.Add(entity);
-                    }
-                }
-                else
-                {
-                    registrosInsert.Add(entity);
-                }
-            }
-
-            await this.repository.InsertListAsync(registrosInsert);
-            await this.repository.UpdateListAsync(registrosUpdate);
-            return true;
+                IsSuccess = true,
+                Result = true
+            };
         }
 
         public static bool PublicInstancePropertiesEqual(EntityBase self, EntityBase to, params string[] ignore)
@@ -72,7 +51,7 @@ namespace Portfolio.Domain.CommandHandler.Base
             if (self != null && to != null)
             {
                 Type type = typeof(EntityBase);
-                List<string> ignoreList = new List<string>(ignore);
+                List<string> ignoreList = new(ignore);
                 foreach (System.Reflection.PropertyInfo pi in type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
                 {
                 if (!ignoreList.Contains(pi.Name))

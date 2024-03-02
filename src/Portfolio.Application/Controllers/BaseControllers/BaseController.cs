@@ -7,19 +7,12 @@ namespace Portfolio.Application.Controllers.BaseControllers
     //[Authorize]
     [Route("/api/v1/[controller]")]
     [ApiController]
-    public class BaseController<LoggerObject> : ControllerBase
+    public class BaseController<LoggerObject>(
+        IMediator mediator,
+        ILogger<LoggerObject> logger) : ControllerBase
         where LoggerObject : class
     {
-        public IMediator mediator;
-        public ILogger<LoggerObject> logger;
-
-        public BaseController(
-            IMediator mediator,
-            ILogger<LoggerObject> logger)
-        {
-            this.mediator = mediator;
-            this.logger = logger;
-        }
-
+        public IMediator _mediator = mediator;
+        public ILogger<LoggerObject> _logger = logger;
     }
 }

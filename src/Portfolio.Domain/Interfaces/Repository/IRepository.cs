@@ -21,6 +21,8 @@ namespace Portfolio.Domain.Interfaces.Repository
         DbSet<T> DataSet { get; }
         Task<bool> InsertListAsync(List<T> listEntity);
         Task<bool> UpdateListAsync(List<T> listEntity);
+        Task<bool> UpsertListAsync(List<T> listEntity);
+        Task<bool> DeleteListAsync(List<T> listEntity);
         
     }
 }

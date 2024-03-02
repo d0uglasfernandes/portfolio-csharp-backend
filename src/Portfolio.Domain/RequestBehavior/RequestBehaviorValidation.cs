@@ -1,28 +1,39 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using FluentValidation;
 using MediatR;
+using System.Collections.Generic;
+using System.Linq;
+using Portfolio.Domain.Dto.ValidationError;
 
 namespace Portfolio.Domain.RequestBehavior
 {
-    public class RequestBehaviorValidation<RequestCommand, TResponse> : IPipelineBehavior<RequestCommand, TResponse>
-        where RequestCommand : IRequest<TResponse>
+    public class RequestBehaviorValidation<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators) : IPipelineBehavior<TRequest, TResponse>
+        where TRequest : IRequest<TResponse>
     {
+        private readonly IEnumerable<IValidator<TRequest>> _validators = validators;
 
-        private readonly IValidator<RequestCommand> _validator;
-
-        private readonly IHttpContextAccessor _httpAcessor;
-
-        public RequestBehaviorValidation(IValidator<RequestCommand> validator, IHttpContextAccessor httpContextAccessor)
+        public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
-            this._validator = validator;
-            this._httpAcessor = httpContextAccessor;
-        }
+            var context = new ValidationContext<TRequest>(request);
 
-        public async Task<TResponse> Handle(RequestCommand request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
-        {
-            await _validator.ValidateAndThrowAsync(request, cancellationToken);
+            var validationFailures = await Task.WhenAll(
+                _validators.Select(validator => validator.ValidateAsync(context)));
+
+            var errors = validationFailures
+                .Where(validationResult => !validationResult.IsValid)
+                .SelectMany(validationResult => validationResult.Errors)
+                .Select(validationFailure => new ValidationErrorDto
+                {
+                    Property = validationFailure.PropertyName,
+                    ErrorMessage = validationFailure.ErrorMessage
+                })
+                .ToList();
+
+            if (errors.Count != 0)
+            {
+                throw new Exceptions.ValidationException(errors);
+            }
 
             var response = await next();
 

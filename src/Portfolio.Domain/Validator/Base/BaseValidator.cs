@@ -6,7 +6,7 @@ namespace Portfolio.Domain.Validator.Base
     {        
         public BaseValidator()
         {
-            ValidatorOptions.Global.DefaultClassLevelCascadeMode = CascadeMode.Stop;
+            ValidatorOptions.Global.DefaultClassLevelCascadeMode = CascadeMode.Continue;
         }
     }
 }

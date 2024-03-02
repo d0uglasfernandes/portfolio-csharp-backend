@@ -11,6 +11,7 @@ namespace Portfolio.Domain.Validator.Company
             RuleFor(x => x.Code).NotEmpty().WithMessage("Code cannot be null.");
             RuleFor(x => x.Name).NotEmpty().WithMessage("Name cannot be null.");
             RuleFor(x => x.FederalTaxIdentificationNumber).NotEmpty().WithMessage("Federal Tax Identification Number cannot be null.");
+            RuleFor(x => x.DateOfBirth).NotEmpty().WithMessage("Date of birth cannot be null.");
         }
     }
 }

@@ -1,9 +1,8 @@
 using System;
-using MediatR;
 
 namespace Portfolio.Domain.Command.Base
 {
-    public class BaseDeleteCommand : IRequest<bool>
+    public class BaseDeleteCommand : BaseCommand
     {
         public Guid Id { get; set; }
     }
