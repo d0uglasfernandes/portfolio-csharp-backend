@@ -5,7 +5,7 @@ namespace Portfolio.CrossCutting.DependencyInjection
 {
     public static class ConfigureMassTransitRabbitMQ
     {
-        public static IServiceCollection AddMassTransitRabbitMQ(this IServiceCollection services)
+        public static IServiceCollection AddMassTransitRabbitMQ(this IServiceCollection services, string host, string username, string password)
         {
             services.AddMassTransit(x =>
             {
@@ -13,10 +13,10 @@ namespace Portfolio.CrossCutting.DependencyInjection
 
                 x.UsingRabbitMq((context, cfg) =>
                 {
-                    cfg.Host("localhost", "/", c =>
+                    cfg.Host(host, "/", c =>
                     {
-                        c.Username("guest");
-                        c.Password("guest");
+                        c.Username(username);
+                        c.Password(password);
                     });
 
                     cfg.ReceiveEndpoint("CompanyQueue", ec =>

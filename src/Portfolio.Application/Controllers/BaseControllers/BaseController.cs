@@ -1,7 +1,6 @@
 ﻿using MediatR;
 //using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace Portfolio.Application.Controllers.BaseControllers
 {

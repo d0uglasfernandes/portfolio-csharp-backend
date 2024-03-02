@@ -7,14 +7,11 @@ using FluentValidation;
 
 namespace Portfolio.Domain.CommandHandler.Company
 {
-    public class CompanyDeleteCommandHandler 
-        : DeleteCommandHandlerBase<CompanyDeleteCommand, CompanyEntity>
+    public class CompanyDeleteCommandHandler(
+        IDataModuleDBPortfolio dataModule,
+        IMapper mapper,
+        IValidator<CompanyDeleteCommand> validator)
+                : DeleteCommandHandlerBase<CompanyDeleteCommand, CompanyEntity>(dataModule, mapper, validator, dataModule.CompanyRepository)
     {
-        public CompanyDeleteCommandHandler(
-            IDataModuleDBPortfolio dataModule,
-            IMapper mapper,
-            IValidator<CompanyDeleteCommand> validator)
-        : base(dataModule, mapper, validator, dataModule.CompanyRepository)
-        { }
     }
 }

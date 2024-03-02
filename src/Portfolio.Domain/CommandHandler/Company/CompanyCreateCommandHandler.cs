@@ -7,13 +7,11 @@ using FluentValidation;
 
 namespace Portfolio.Domain.CommandHandler.Company
 {
-    public class CompanyCreateCommandHandler 
-        : CreateCommandHandlerBase<CompanyCreateCommand, CompanyEntity>
+    public class CompanyCreateCommandHandler(
+        IDataModuleDBPortfolio dataModule,
+        IMapper mapper,
+        IValidator<CompanyCreateCommand> validator)
+                : CreateCommandHandlerBase<CompanyCreateCommand, CompanyEntity>(dataModule, mapper, validator, dataModule.CompanyRepository)
     {
-        public CompanyCreateCommandHandler(
-            IDataModuleDBPortfolio dataModule,
-            IMapper mapper,
-            IValidator<CompanyCreateCommand> validator)
-        : base(dataModule, mapper, validator, dataModule.CompanyRepository) { }
     }
 }
